@@ -290,16 +290,6 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 			goto err;
 		}
 	}
-	else if (strncmp(num, "GB", 2) == 0) {
-		// GB[A-Z0-9]{5,12}
-		if (len < (2 + 5) || len > (2 + 12)) {
-			goto err;
-		}
-
-		if (!_viesapi_isalnum(num, 2, len - 2)) {
-			goto err;
-		}
-	}
 	else if (strncmp(num, "HR", 2) == 0) {
 		// HR\\d{11}
 		if (len != (2 + 11)) {
@@ -451,6 +441,16 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		}
 
 		if (!_viesapi_isdigit(num, 2, 10)) {
+			goto err;
+		}
+	}
+	else if (strncmp(num, "XI", 2) == 0) {
+		// XI[A-Z0-9]{5,12}
+		if (len < (2 + 5) || len > (2 + 12)) {
+			goto err;
+		}
+
+		if (!_viesapi_isalnum(num, 2, len - 2)) {
 			goto err;
 		}
 	}
