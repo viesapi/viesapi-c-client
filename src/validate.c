@@ -63,6 +63,19 @@ static BOOL _viesapi_isalnum(char* str, int start, int count)
 	return TRUE;
 }
 
+static BOOL _viesapi_isalnum_ext(char* str, int start, int count)
+{
+	int i;
+
+	for (i = start; i < (start + count); i++) {
+		if (!isalnum(str[i]) && str[i] != '+' && str[i] != '*') {
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
 /////////////////////////////////////////////////////////////////
 
 VIESAPI_API char* viesapi_nip_normalize(const char* nip)
@@ -140,7 +153,7 @@ VIESAPI_API char* viesapi_euvat_normalize(const char* euvat)
 	memset(num, 0, sizeof(num));
 
 	for (i = 0, p = 0; i < len; i++) {
-		if (isalnum(euvat[i]) && p < (sizeof(num) - 1)) {
+		if ((isalnum(euvat[i]) || euvat[i] == '+' || euvat[i] == '*') && p < (sizeof(num) - 1)) {
 			num[p++] = toupper(euvat[i]);
 		}
 	}
@@ -177,8 +190,8 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		}
 	}
 	else if (strncmp(num, "BE", 2) == 0) {
-		// BE0\\d{9}
-		if (len != (3 + 9) || num[2] != '0') {
+		// BE[0-1]{1}\d{9}
+		if (len != (3 + 9) || (num[2] != '0' && num[2] != '1')) {
 			goto err;
 		}
 
@@ -197,7 +210,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		}
 	}
 	else if (strncmp(num, "CY", 2) == 0) {
-		// CY\\d{8}[A-Z]{1}
+		// CY\d{8}[A-Z]{1}
 		if (len != (2 + 8 + 1) || !isalpha(num[len - 1])) {
 			goto err;
 		}
@@ -257,12 +270,20 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		}
 	}
 	else if (strncmp(num, "ES", 2) == 0) {
-		// ES[A-Z0-9]{9}
-		if (len != (2 + 9)) {
+		// ES[A-Z0-9]{1}\d{7}[A-Z0-9]{1}
+		if (len != (2 + 1 + 7 + 1)) {
 			goto err;
 		}
 
-		if (!_viesapi_isalnum(num, 2, 9)) {
+		if (!_viesapi_isalnum(num, 2, 1)) {
+			goto err;
+		}
+
+		if (!_viesapi_isdigit(num, 3, 7)) {
+			goto err;
+		}
+
+		if (!_viesapi_isalnum(num, 10, 1)) {
 			goto err;
 		}
 	}
@@ -311,12 +332,12 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		}
 	}
 	else if (strncmp(num, "IE", 2) == 0) {
-		// IE[A-Z0-9]{8,9}
+		// IE[A-Z0-9+*]{8,9}
 		if (len < (2 + 8) || len > (2 + 9)) {
 			goto err;
 		}
 
-		if (!_viesapi_isalnum(num, 2, len - 2)) {
+		if (!_viesapi_isalnum_ext(num, 2, len - 2)) {
 			goto err;
 		}
 	}
@@ -371,16 +392,12 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		}
 	}
 	else if (strncmp(num, "NL", 2) == 0) {
-		// NL\\d{9}B\\d{2}
-		if (len != (2 + 9 + 1 + 2) || num[11] != 'B') {
+		// NL[A-Z0-9+*]{12}
+		if (len != (2 + 12)) {
 			goto err;
 		}
 
-		if (!_viesapi_isdigit(num, 2, 9)) {
-			goto err;
-		}
-
-		if (!_viesapi_isdigit(num, 12, 2)) {
+		if (!_viesapi_isalnum_ext(num, 2, 12)) {
 			goto err;
 		}
 	}
