@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 NETCAT (www.netcat.pl)
+ * Copyright 2022-2023 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022 NETCAT (www.netcat.pl)
+ * @copyright 2022-2023 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -291,110 +291,6 @@ err:
 }
 
 /// <summary>
-/// Perform HTTP GET
-/// </summary>
-/// <param name="viesapi">client object</param>
-/// <param name="url">request URL</param>
-/// <param name="doc">response as XML doc</param>
-/// <returns>TRUE if succeeded</returns>
-static BOOL _viesapi_http_get(VIESAPIClient* viesapi, const char* url, IXMLDOMDocument2** doc)
-{
-	IXMLHTTPRequest* pXhr = NULL;
-
-	VARIANT async;
-	VARIANT var;
-	HRESULT hr;
-	
-	BSTR burl = NULL;
-	BSTR auth = NULL;
-	BSTR agent = NULL;
-	BSTR resp = NULL;
-
-	BOOL ret = FALSE;
-
-	long state;
-	long status;
-
-	// clear
-
-	// xml http object
-	if ((hr = CoCreateInstance(&CLSID_XMLHTTPRequest, 0, CLSCTX_INPROC_SERVER, &IID_IXMLHTTPRequest, &pXhr)) != S_OK) {
-		goto err;
-	}
-
-	// send
-	async.vt = VT_BOOL;
-	async.boolVal = VARIANT_FALSE;
-
-	var.vt = VT_BSTR;
-	var.bstrVal = NULL;
-
-	if (!utf8_to_bstr(url, &burl)) {
-		goto err;
-	}
-
-	if ((hr = pXhr->lpVtbl->open(pXhr, L"GET", burl, async, var, var)) != S_OK) {
-		goto err;
-	}
-
-	if (!_viesapi_get_auth_header(viesapi, L"GET", burl, &auth)) {
-		goto err;
-	}
-
-	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Authorization", auth)) != S_OK) {
-		goto err;
-	}
-
-	if (!_viesapi_get_agent_header(viesapi, &agent)) {
-		goto err;
-	}
-
-	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"User-Agent", agent)) != S_OK) {
-		goto err;
-	}
-
-	if ((hr = pXhr->lpVtbl->send(pXhr, var)) != S_OK) {
-		goto err;
-	}
-
-	// check response
-	if ((hr = pXhr->lpVtbl->get_readyState(pXhr, &state)) != S_OK) {
-		goto err;
-	}
-
-	if ((hr = pXhr->lpVtbl->get_status(pXhr, &status)) != S_OK) {
-		goto err;
-	}
-
-	if (state != 4 || status != 200) {
-		goto err;
-	}
-
-	if ((hr = pXhr->lpVtbl->get_responseText(pXhr, &resp)) != S_OK) {
-		goto err;
-	}
-
-	if (!_viesapi_load_doc(resp, doc)) {
-		goto err;
-	}
-
-	// ok
-	ret = TRUE;
-
-err:
-	if (pXhr) {
-		pXhr->lpVtbl->Release(pXhr);
-	}
-
-	SysFreeString(burl);
-	SysFreeString(auth);
-	SysFreeString(agent);
-	SysFreeString(resp);
-
-	return ret;
-}
-
-/// <summary>
 /// Clear last error
 /// </summary>
 /// <param name="viesapi">client object</param>
@@ -663,6 +559,133 @@ static BOOL _viesapi_parse_bool(IXMLDOMDocument2* doc, BSTR xpath, BOOL def)
 	return val;
 }
 
+/// <summary>
+/// Perform HTTP GET
+/// </summary>
+/// <param name="viesapi">client object</param>
+/// <param name="url">request URL</param>
+/// <param name="doc">response as XML doc</param>
+/// <returns>TRUE if succeeded</returns>
+static BOOL _viesapi_http_get(VIESAPIClient* viesapi, const char* url, IXMLDOMDocument2** doc)
+{
+	IXMLHTTPRequest* pXhr = NULL;
+
+	VARIANT async;
+	VARIANT var;
+	HRESULT hr;
+
+	BSTR burl = NULL;
+	BSTR auth = NULL;
+	BSTR agent = NULL;
+	BSTR resp = NULL;
+
+	BOOL ret = FALSE;
+
+	char* code = NULL;
+
+	long state;
+	long status;
+
+	// clear
+
+	// xml http object
+	if ((hr = CoCreateInstance(&CLSID_XMLHTTPRequest, 0, CLSCTX_INPROC_SERVER, &IID_IXMLHTTPRequest, &pXhr)) != S_OK) {
+		goto err;
+	}
+
+	// send
+	async.vt = VT_BOOL;
+	async.boolVal = VARIANT_FALSE;
+
+	var.vt = VT_BSTR;
+	var.bstrVal = NULL;
+
+	if (!utf8_to_bstr(url, &burl)) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->open(pXhr, L"GET", burl, async, var, var)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Accept", L"text/xml")) != S_OK) {
+		goto err;
+	}
+
+	if (!_viesapi_get_auth_header(viesapi, L"GET", burl, &auth)) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Authorization", auth)) != S_OK) {
+		goto err;
+	}
+
+	if (!_viesapi_get_agent_header(viesapi, &agent)) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"User-Agent", agent)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->send(pXhr, var)) != S_OK) {
+		goto err;
+	}
+
+	// check response
+	if ((hr = pXhr->lpVtbl->get_readyState(pXhr, &state)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->get_status(pXhr, &status)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->get_responseText(pXhr, &resp)) != S_OK) {
+		goto err;
+	}
+
+	// parse response (if exists)
+	if (resp && !_viesapi_load_doc(resp, doc)) {
+		goto err;
+	}
+
+	if (*doc) {
+		code = _viesapi_parse_str(*doc, L"/result/error/code", NULL);
+	}
+
+	if (state != 4 || status != 200) {
+		goto err;
+	}
+
+	// ok
+	ret = TRUE;
+
+err:
+	if (code && strlen(code) > 0) {
+		_viesapi_set_err(viesapi, atoi(code), _viesapi_parse_str(*doc, L"/result/error/description", NULL));
+		ret = FALSE;
+	}
+	else if (!ret) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_CONNECT, NULL);
+	}
+
+	if (pXhr) {
+		pXhr->lpVtbl->Release(pXhr);
+	}
+
+	SysFreeString(burl);
+	SysFreeString(auth);
+	SysFreeString(agent);
+	SysFreeString(resp);
+
+	if (code) {
+		free(code);
+	}
+
+	return ret;
+}
+
 /////////////////////////////////////////////////////////////////
 
 VIESAPI_API BOOL viesapi_new(VIESAPIClient** viesapi, const char* url, const char* id, const char* key)
@@ -741,8 +764,6 @@ VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* 
 
 	char url[MAX_STRING];
 
-	char* code = NULL;
-
 	if (!viesapi || !euvat || strlen(euvat) == 0) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
 		goto err;
@@ -760,19 +781,10 @@ VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* 
 
 	// prepare request
 	if (!_viesapi_http_get(viesapi, url, &doc)) {
-		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_CONNECT, NULL);
 		goto err;
 	}
 
 	// parse response
-	code = _viesapi_parse_str(doc, L"/result/error/code", NULL);
-
-	if (code && strlen(code) > 0) {
-		// error
-		_viesapi_set_err(viesapi, atoi(code), _viesapi_parse_str(doc, L"/result/error/description", NULL));
-		goto err;
-	}
-
 	if (!viesdata_new(&vies)) {
 		goto err;
 	}
@@ -797,8 +809,6 @@ err:
 		doc->lpVtbl->Release(doc);
 	}
 
-	free(code);
-
 	return vies;
 }
 
@@ -808,8 +818,6 @@ VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 	AccountStatus* status = NULL;
 
 	char url[MAX_STRING];
-
-	char* code = NULL;
 
 	if (!viesapi) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
@@ -824,19 +832,10 @@ VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 
 	// prepare request
 	if (!_viesapi_http_get(viesapi, url, &doc)) {
-		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_CONNECT, NULL);
 		goto err;
 	}
 
 	// parse response
-	code = _viesapi_parse_str(doc, L"/result/error/code", NULL);
-
-	if (code && strlen(code) > 0) {
-		// error
-		_viesapi_set_err(viesapi, atoi(code), _viesapi_parse_str(doc, L"/result/error/description", NULL));
-		goto err;
-	}
-
 	if (!accountstatus_new(&status)) {
 		goto err;
 	}
@@ -870,8 +869,6 @@ err:
 	if (doc) {
 		doc->lpVtbl->Release(doc);
 	}
-
-	free(code);
 
 	return status;
 }
