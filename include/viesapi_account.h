@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 NETCAT (www.netcat.pl)
+ * Copyright 2022-2025 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022-2023 NETCAT (www.netcat.pl)
+ * @copyright 2022-2025 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -62,6 +62,11 @@ typedef struct AccountStatus {
 	/// Net price of a single query for an individual plan
 	/// </summary>
 	double ItemPriceStatus;
+
+	/// <summary>
+	/// Net price of a single query for an individual plan
+	/// </summary>
+	double ItemPriceParsed;
 
 	/// <summary>
 	/// Maximum number of queries in the plan
@@ -114,9 +119,19 @@ typedef struct AccountStatus {
 	BOOL FuncGetVIESData;
 
 	/// <summary>
+	/// Access to entity status checking functions in the VIES system returning parsed trader address components
+	/// </summary>
+	BOOL FuncGetVIESDataParsed;
+
+	/// <summary>
 	/// Number of queries to the VIES system performed in the current month
 	/// </summary>
 	int VIESDataCount;
+
+	/// <summary>
+	/// Number of queries to the VIES system returning parsed data performed in the current month
+	/// </summary>
+	int VIESDataParsedCount;
 
 	/// <summary>
 	/// Total number of queries performed in the current month

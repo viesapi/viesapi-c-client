@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 NETCAT (www.netcat.pl)
+ * Copyright 2022-2025 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,53 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022-2023 NETCAT (www.netcat.pl)
+ * @copyright 2022-2025 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
 #include "internal.h"
 #include "viesapi.h"
 
+VIESAPI_API BOOL address_components_new(AddressComponents** addr)
+{
+	AddressComponents* ac = NULL;
+
+	BOOL ret = FALSE;
+
+	if ((ac = (AddressComponents*)malloc(sizeof(AddressComponents))) == NULL) {
+		goto err;
+	}
+
+	memset(ac, 0, sizeof(AddressComponents));
+
+	// ok
+	*addr = ac;
+	ac = NULL;
+
+	ret = TRUE;
+
+err:
+	address_components_free(&ac);
+
+	return ret;
+}
+
+VIESAPI_API void address_components_free(AddressComponents** addr)
+{
+	AddressComponents* ac = (addr ? *addr : NULL);
+
+	if (ac) {
+		free(ac->Country);
+		free(ac->PostalCode);
+		free(ac->City);
+		free(ac->Street);
+		free(ac->StreetNumber);
+		free(ac->HouseNumber);
+
+		free(*addr);
+		*addr = NULL;
+	}
+}
 
 VIESAPI_API BOOL viesdata_new(VIESData** vies)
 {
@@ -59,6 +99,8 @@ VIESAPI_API void viesdata_free(VIESData** vies)
 		free(vd->TraderName);
 		free(vd->TraderCompanyType);
 		free(vd->TraderAddress);
+
+		address_components_free(&vd->TraderAddressComponents);
 
 		free(vd->ID);
 		free(vd->Source);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 NETCAT (www.netcat.pl)
+ * Copyright 2022-2025 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022-2023 NETCAT (www.netcat.pl)
+ * @copyright 2022-2025 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -23,7 +23,7 @@
 
 /////////////////////////////////////////////////////////////////
 
-#define VIESAPI_VERSION			"1.2.6"
+#define VIESAPI_VERSION			"1.2.7"
 
 #define VIESAPI_PRODUCTION_URL	"https://viesapi.eu/api"
 
@@ -117,6 +117,14 @@ VIESAPI_API char* viesapi_get_last_err(VIESAPIClient* viesapi);
 /// <param name="euvat">EU VAT number with 2-letter country prefix</param>
 /// <returns>VIES data or NULL in case of error</returns>
 VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* euvat);
+
+/// <summary>
+/// Get VIES data for specified number with trader address parsed into components
+/// </summary>
+/// <param name="viesapi">client object</param>
+/// <param name="euvat">EU VAT number with 2-letter country prefix</param>
+/// <returns>VIES data or NULL in case of error</returns>
+VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const char* euvat);
 
 /// <summary>
 /// Get current account status

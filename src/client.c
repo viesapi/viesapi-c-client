@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 NETCAT (www.netcat.pl)
+ * Copyright 2022-2025 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022-2023 NETCAT (www.netcat.pl)
+ * @copyright 2022-2025 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -812,6 +812,84 @@ err:
 	return vies;
 }
 
+VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const char* euvat)
+{
+	IXMLDOMDocument2* doc = NULL;
+	VIESData* vies = NULL;
+
+	char url[MAX_STRING];
+
+	char* country = NULL;
+
+	if (!viesapi || !euvat || strlen(euvat) == 0) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
+		goto err;
+	}
+
+	// clear error
+	_viesapi_clear_err(viesapi);
+
+	// validate number and construct path
+	snprintf(url, sizeof(url), "%s/get/vies/parsed/", viesapi->url);
+
+	if (!_viesapi_get_path_suffix(viesapi, EUVAT, euvat, url)) {
+		goto err;
+	}
+
+	// prepare request
+	if (!_viesapi_http_get(viesapi, url, &doc)) {
+		goto err;
+	}
+
+	// parse response
+	if (!viesdata_new(&vies)) {
+		goto err;
+	}
+
+	vies->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
+
+	vies->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
+	vies->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
+
+	vies->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
+
+	vies->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
+	vies->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
+	vies->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
+
+	country = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/country", NULL);
+
+	if (country && strlen(country) > 0) {
+		if (!address_components_new(&vies->TraderAddressComponents)) {
+			goto err;
+		}
+
+		vies->TraderAddressComponents->Country = country;
+		country = NULL;
+
+		vies->TraderAddressComponents->PostalCode = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/postalCode", NULL);
+		vies->TraderAddressComponents->City = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/city", NULL);
+		vies->TraderAddressComponents->Street = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/street", NULL);
+		vies->TraderAddressComponents->StreetNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/streetNumber", NULL);
+		vies->TraderAddressComponents->HouseNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/houseNumber", NULL);
+	}
+
+	vies->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
+	vies->Date = _viesapi_parse_date(doc, L"/result/vies/date");
+	vies->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
+
+err:
+	if (doc) {
+		doc->lpVtbl->Release(doc);
+	}
+
+	if (country) {
+		free(country);
+	}
+
+	return vies;
+}
+
 VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 {
 	IXMLDOMDocument2* doc = NULL;
@@ -848,6 +926,7 @@ VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 	status->SubscriptionPrice = _viesapi_parse_double(doc, L"/result/account/billingPlan/subscriptionPrice", 0);
 	status->ItemPrice = _viesapi_parse_double(doc, L"/result/account/billingPlan/itemPrice", 0);
 	status->ItemPriceStatus = _viesapi_parse_double(doc, L"/result/account/billingPlan/itemPriceCheckStatus", 0);
+	status->ItemPriceParsed = _viesapi_parse_double(doc, L"/result/account/billingPlan/itemPriceStatusParsed", 0);
 
 	status->Limit = _viesapi_parse_int(doc, L"/result/account/billingPlan/limit", 0);
 	status->RequestDelay = _viesapi_parse_int(doc, L"/result/account/billingPlan/requestDelay", 0);
@@ -861,8 +940,10 @@ VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 	status->Monitor = _viesapi_parse_bool(doc, L"/result/account/billingPlan/monitor", FALSE);
 
 	status->FuncGetVIESData = _viesapi_parse_bool(doc, L"/result/account/billingPlan/funcGetVIESData", FALSE);
+	status->FuncGetVIESDataParsed = _viesapi_parse_bool(doc, L"/result/account/billingPlan/funcGetVIESDataParsed", FALSE);
 
 	status->VIESDataCount = _viesapi_parse_int(doc, L"/result/account/requests/viesData", 0);
+	status->VIESDataParsedCount = _viesapi_parse_int(doc, L"/result/account/requests/viesDataParsed", 0);
 	status->TotalCount = _viesapi_parse_int(doc, L"/result/account/requests/total", 0);
 
 err:

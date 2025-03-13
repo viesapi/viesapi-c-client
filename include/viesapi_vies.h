@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 NETCAT (www.netcat.pl)
+ * Copyright 2022-2025 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,72 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022-2023 NETCAT (www.netcat.pl)
+ * @copyright 2022-2025 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
 #ifndef __VIESAPI_API_VIES_H__
 #define __VIESAPI_API_VIES_H__
+
+/////////////////////////////////////////////////////////////////
+
+/// <summary>
+/// Address components
+/// </summary>
+typedef struct AddressComponents {
+	/// <summary>
+	/// Country name
+	/// </summary>
+	char* Country;
+
+	/// <summary>
+	/// Postal code
+	/// </summary>
+	char* PostalCode;
+
+	/// <summary>
+	/// City or locality
+	/// </summary>
+	char* City;
+
+	/// <summary>
+	/// Street name
+	/// </summary>
+	char* Street;
+
+	/// <summary>
+	/// Street number
+	/// </summary>
+	char* StreetNumber;
+
+	/// <summary>
+	/// House number
+	/// </summary>
+	char* HouseNumber;
+} AddressComponents;
+ 
+/////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// <summary>
+/// Create new object
+/// </summary>
+/// <param name="addr">pointer to a new object</param>
+/// <returns>TRUE if succeeded</returns>
+VIESAPI_API BOOL address_components_new(AddressComponents** addr);
+
+/// <summary>
+/// Free data object
+/// </summary>
+/// <param name="addr">pointer to an object to free</param>
+VIESAPI_API void address_components_free(AddressComponents** addr);
+
+#ifdef __cplusplus
+}
+#endif
 
 /////////////////////////////////////////////////////////////////
 
@@ -62,6 +122,11 @@ typedef struct VIESData {
 	/// Trader address
 	/// </summary>
 	char* TraderAddress;
+
+	/// <summary>
+	/// Trader address parsed into components
+	/// </summary>
+	AddressComponents* TraderAddressComponents;
 
 	/// <summary>
 	/// Request ID from EU VIES system

@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 NETCAT (www.netcat.pl)
+ * Copyright 2022-2025 NETCAT (www.netcat.pl)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @author NETCAT <firma@netcat.pl>
- * @copyright 2022-2023 NETCAT (www.netcat.pl)
+ * @copyright 2022-2025 NETCAT (www.netcat.pl)
  * @license https://www.apache.org/licenses/LICENSE-2.0
  */
 
@@ -34,6 +34,7 @@ int main()
 	
 	AccountStatus* account = NULL;
 	VIESData* vies = NULL;
+	VIESData* vies_parsed = NULL;
 
 	const char* vat_eu = "PL7171642051";
 
@@ -71,11 +72,33 @@ int main()
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
+	// Get VIES data from VIES system with parsed trader address components
+	vies_parsed = viesapi_get_vies_data_parsed(viesapi, vat_eu);
+
+	if (vies_parsed != NULL) {
+		printf("Country:  %s\n", vies_parsed->CountryCode);
+		printf("VAT ID:   %s\n", vies_parsed->VATNumber);
+		printf("Is valid: %d\n", vies_parsed->Valid);
+
+		if (vies_parsed->TraderAddressComponents) {
+			printf("Country:      %s\n", vies_parsed->TraderAddressComponents->Country);
+			printf("PostalCode:   %s\n", vies_parsed->TraderAddressComponents->PostalCode);
+			printf("City:         %s\n", vies_parsed->TraderAddressComponents->City);
+			printf("Street:       %s\n", vies_parsed->TraderAddressComponents->Street);
+			printf("StreetNumber: %s\n", vies_parsed->TraderAddressComponents->StreetNumber);
+			printf("HouseNumber:  %s\n", vies_parsed->TraderAddressComponents->HouseNumber);
+		}
+	}
+	else {
+		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
+	}
+
 err:
 	viesapi_free(&viesapi);
 
 	accountstatus_free(&account);
 	viesdata_free(&vies);
+	viesdata_free(&vies_parsed);
 
 	return 0;
 }
