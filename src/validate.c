@@ -486,3 +486,23 @@ err:
 
 	return ret;
 }
+
+VIESAPI_API BOOL viesapi_is_uuid(const char* uuid)
+{
+	const char* s = uuid;
+	
+	int tmp;
+
+	if (!uuid || strlen(uuid) != 36) {
+		return FALSE;
+	}
+
+	while (*s) {
+		if (isspace(*s++)) {
+			return FALSE;
+		}
+	}
+
+	return (s - uuid == 36 && sscanf(uuid, "%4x%4x-%4x-%4x-%4x-%4x%4x%4x%c",
+		&tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &tmp) == 8);
+}

@@ -55,6 +55,13 @@ VIESAPI_API char* viesapi_euvat_normalize(const char* euvat);
 /// <returns>TRUE if number is valid</returns>
 VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat);
 
+/// <summary>
+/// Checks if specified string is valid UUID
+/// </summary>
+/// <param name="number">input string</param>
+/// <returns>TRUE if string is valid UUID</returns>
+VIESAPI_API BOOL viesapi_is_uuid(const char* uuid);
+
 #ifdef __cplusplus
 }
 #endif

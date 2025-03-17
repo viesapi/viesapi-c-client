@@ -35,8 +35,12 @@ int main()
 	AccountStatus* account = NULL;
 	VIESData* vies = NULL;
 	VIESData* vies_parsed = NULL;
+	BatchResult* result = NULL;
 
 	const char* vat_eu = "PL7171642051";
+	char* token = NULL;
+
+	int i;
 
 	// Create client object and establish connection to the production system
 	// id – API identifier
@@ -93,12 +97,56 @@ int main()
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
+
+	// Upload batch of VAT numbers and get their current VAT statuses and traders data
+	char* numbers[] = {
+		vat_eu,
+		"DK56314210",
+		"CZ7710043187"
+	};
+
+	token = viesapi_get_vies_data_async(viesapi, numbers, 3);
+
+	if (token != NULL) {
+		printf("Batch token:  %s\n", token);
+	}
+	else {
+		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
+	}
+
+	// Check batch result and download data (at production it usually takes 2-3 min for result to be ready)
+	while ((result = viesapi_get_vies_data_async_result(viesapi, token)) == NULL) {
+		if (viesapi_get_last_err_code(viesapi) != VIESAPI_ERR_BATCH_PROCESSING) {
+			printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
+			return;
+		}
+
+		printf("Batch is still processing, waiting...\n");
+		Sleep(10000);
+	}
+
+	// Batch result is ready
+	for (i = 0; i < result->NumbersCount; i++) {
+		printf("Country:  %s\n", result->Numbers[i]->CountryCode);
+		printf("VAT ID:   %s\n", result->Numbers[i]->VATNumber);
+		printf("Is valid: %d\n", result->Numbers[i]->Valid);
+		printf("\n");
+	}
+
+	for (i = 0; i < result->ErrorsCount; i++) {
+		printf("Country:  %s\n", result->Errors[i]->CountryCode);
+		printf("VAT ID:   %s\n", result->Errors[i]->VATNumber);
+		printf("Error:    %s\n", result->Errors[i]->Error);
+		printf("\n");
+	}
+
 err:
 	viesapi_free(&viesapi);
 
 	accountstatus_free(&account);
 	viesdata_free(&vies);
 	viesdata_free(&vies_parsed);
+	batchresult_free(&result);
 
 	return 0;
 }

@@ -44,6 +44,7 @@
  
  /////////////////////////////////////////////////////////////////
 
+#define MAX_BATCH		16384
 #define MAX_STRING		1024
 #define MAX_NUMBER		40
 

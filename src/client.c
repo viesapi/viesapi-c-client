@@ -620,6 +620,10 @@ static BOOL _viesapi_http_get(VIESAPIClient* viesapi, const char* url, IXMLDOMDo
 		goto err;
 	}
 
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Cache-Control", L"no-cache")) != S_OK) {
+		goto err;
+	}
+
 	if (!_viesapi_get_agent_header(viesapi, &agent)) {
 		goto err;
 	}
@@ -678,6 +682,159 @@ err:
 	SysFreeString(auth);
 	SysFreeString(agent);
 	SysFreeString(resp);
+
+	if (code) {
+		free(code);
+	}
+
+	return ret;
+}
+
+/// <summary>
+/// Perform HTTP POST
+/// </summary>
+/// <param name="viesapi">client object</param>
+/// <param name="url">request URL</param>
+/// <param name="type">content type</param>
+/// <param name="content">content bytes</param>
+/// <param name="doc">response as XML doc</param>
+/// <returns>TRUE if succeeded</returns>
+static BOOL _viesapi_http_post(VIESAPIClient* viesapi, const char* url, const char* type, const char* content, IXMLDOMDocument2** doc)
+{
+	IXMLHTTPRequest* pXhr = NULL;
+
+	VARIANT async;
+	VARIANT var;
+	VARIANT vcontent;
+	HRESULT hr;
+
+	BSTR burl = NULL;
+	BSTR btype = NULL;
+	BSTR auth = NULL;
+	BSTR agent = NULL;
+	BSTR resp = NULL;
+
+	BOOL ret = FALSE;
+
+	char* code = NULL;
+
+	long state;
+	long status;
+
+	// clear
+
+	// xml http object
+	if ((hr = CoCreateInstance(&CLSID_XMLHTTPRequest, 0, CLSCTX_INPROC_SERVER, &IID_IXMLHTTPRequest, &pXhr)) != S_OK) {
+		goto err;
+	}
+
+	// send
+	async.vt = VT_BOOL;
+	async.boolVal = VARIANT_FALSE;
+
+	var.vt = VT_BSTR;
+	var.bstrVal = NULL;
+
+	vcontent.vt = VT_BSTR;
+	vcontent.bstrVal = NULL;
+
+	if (!utf8_to_bstr(url, &burl)) {
+		goto err;
+	}
+
+	if (!utf8_to_bstr(type, &btype)) {
+		goto err;
+	}
+
+	if (!utf8_to_bstr(content, &vcontent.bstrVal)) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->open(pXhr, L"POST", burl, async, var, var)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Accept", L"text/xml")) != S_OK) {
+		goto err;
+	}
+
+	if (!_viesapi_get_auth_header(viesapi, L"POST", burl, &auth)) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Authorization", auth)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Cache-Control", L"no-cache")) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"Content-Type", btype)) != S_OK) {
+		goto err;
+	}
+
+	if (!_viesapi_get_agent_header(viesapi, &agent)) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->setRequestHeader(pXhr, L"User-Agent", agent)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->send(pXhr, vcontent)) != S_OK) {
+		goto err;
+	}
+
+	// check response
+	if ((hr = pXhr->lpVtbl->get_readyState(pXhr, &state)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->get_status(pXhr, &status)) != S_OK) {
+		goto err;
+	}
+
+	if ((hr = pXhr->lpVtbl->get_responseText(pXhr, &resp)) != S_OK) {
+		goto err;
+	}
+
+	// parse response (if exists)
+	if (resp && !_viesapi_load_doc(resp, doc)) {
+		goto err;
+	}
+
+	if (*doc) {
+		code = _viesapi_parse_str(*doc, L"/result/error/code", NULL);
+	}
+
+	if (state != 4 || status != 200) {
+		goto err;
+	}
+
+	// ok
+	ret = TRUE;
+
+err:
+	if (code && strlen(code) > 0) {
+		_viesapi_set_err(viesapi, atoi(code), _viesapi_parse_str(*doc, L"/result/error/description", NULL));
+		ret = FALSE;
+	}
+	else if (!ret) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_CONNECT, NULL);
+	}
+
+	if (pXhr) {
+		pXhr->lpVtbl->Release(pXhr);
+	}
+
+	SysFreeString(burl);
+	SysFreeString(btype);
+	SysFreeString(auth);
+	SysFreeString(agent);
+	SysFreeString(resp);
+
+	SysFreeString(vcontent.bstrVal);
 
 	if (code) {
 		free(code);
@@ -764,13 +921,13 @@ VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* 
 
 	char url[MAX_STRING];
 
+	// clear error
+	_viesapi_clear_err(viesapi);
+
 	if (!viesapi || !euvat || strlen(euvat) == 0) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
 		goto err;
 	}
-
-	// clear error
-	_viesapi_clear_err(viesapi);
 
 	// validate number and construct path
 	snprintf(url, sizeof(url), "%s/get/vies/", viesapi->url);
@@ -821,13 +978,13 @@ VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const
 
 	char* country = NULL;
 
+	// clear error
+	_viesapi_clear_err(viesapi);
+
 	if (!viesapi || !euvat || strlen(euvat) == 0) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
 		goto err;
 	}
-
-	// clear error
-	_viesapi_clear_err(viesapi);
 
 	// validate number and construct path
 	snprintf(url, sizeof(url), "%s/get/vies/parsed/", viesapi->url);
@@ -890,6 +1047,228 @@ err:
 	return vies;
 }
 
+VIESAPI_API char* viesapi_get_vies_data_async(VIESAPIClient* viesapi, const char* numbers[], int count)
+{
+	IXMLDOMDocument2* doc = NULL;
+	VIESData* vies = NULL;
+
+	char url[MAX_STRING];
+	char xml[MAX_BATCH];
+
+	char* number = NULL;
+	char* token = NULL;
+
+	int i;
+
+	// clear error
+	_viesapi_clear_err(viesapi);
+
+	if (!viesapi || !numbers || count < 2 || count > 99) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_BATCH_SIZE, NULL);
+		goto err;
+	}
+
+	// prepare request
+	snprintf(xml, sizeof(xml), "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n"
+		"<request>\r\n"
+		"  <batch>\r\n"
+		"    <numbers>\r\n");
+
+	for (i = 0; i < count; i++) {
+		if (!viesapi_euvat_is_valid(numbers[i])) {
+			_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_EUVAT, NULL);
+			goto err;
+		}
+
+		number = viesapi_euvat_normalize(numbers[i]);
+
+		strcat(xml, "      <number>");
+		strcat(xml, number);
+		strcat(xml, "</number>\r\n");
+
+		free(number);
+		number = NULL;
+	}
+	
+	strcat(xml, "    </numbers>\r\n"
+		"  </batch>\r\n"
+		"</request>");
+
+	// construct path
+	snprintf(url, sizeof(url), "%s/batch/vies", viesapi->url);
+
+	if (!_viesapi_http_post(viesapi, url, "text/xml; charset=UTF-8", xml, &doc)) {
+		goto err;
+	}
+
+	// parse response
+	token = _viesapi_parse_str(doc, L"/result/batch/token", NULL);
+
+	if (!token || strlen(token) == 0) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_RESPONSE, NULL);
+		goto err;
+	}
+
+err:
+	if (doc) {
+		doc->lpVtbl->Release(doc);
+	}
+
+	if (number) {
+		free(number);
+	}
+
+	return token;
+}
+
+VIESAPI_API BatchResult* viesapi_get_vies_data_async_result(VIESAPIClient* viesapi, const char* token)
+{
+	IXMLDOMDocument2* doc = NULL;
+	BatchResult* result = NULL;
+	VIESData* vd = NULL;
+	VIESError* ve = NULL;
+
+	wchar_t xpath[MAX_STRING];
+	char url[MAX_STRING];
+
+	char* str = NULL;
+
+	int i;
+
+	// clear error
+	_viesapi_clear_err(viesapi);
+
+	if (!viesapi || !viesapi_is_uuid(token)) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
+		goto err;
+	}
+
+	// validate number and construct path
+	snprintf(url, sizeof(url), "%s/batch/vies/%s", viesapi->url, token);
+
+	// prepare request
+	if (!_viesapi_http_get(viesapi, url, &doc)) {
+		goto err;
+	}
+
+	// parse response
+	if (!batchresult_new(&result)) {
+		goto err;
+	}
+
+	for (i = 1; ; i++) {
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/uid", i);
+		str = _viesapi_parse_str(doc, xpath, NULL);
+
+		if (!str || strlen(str) == 0) {
+			break;
+		}
+
+		if (!viesdata_new(&vd)) {
+			batchresult_free(&result);
+			goto err;
+		}
+
+		vd->UID = str;
+		str = NULL;
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/countryCode", i);
+		vd->CountryCode = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/vatNumber", i);
+		vd->VATNumber = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/valid", i);
+		vd->Valid = _viesapi_parse_bool(doc, xpath, FALSE);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/traderName", i);
+		vd->TraderName = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/traderCompanyType", i);
+		vd->TraderCompanyType = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/traderAddress", i);
+		vd->TraderAddress = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/id", i);
+		vd->ID = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/date", i);
+		vd->Date = _viesapi_parse_date(doc, xpath);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/source", i);
+		vd->Source = _viesapi_parse_str(doc, xpath, NULL);
+
+		// add
+		result->NumbersCount++;
+
+		if ((result->Numbers = (VIESData**)realloc(result->Numbers, sizeof(VIESData*) * result->NumbersCount)) == NULL) {
+			batchresult_free(&result);
+			goto err;
+		}
+
+		result->Numbers[result->NumbersCount - 1] = vd;
+		vd = NULL;
+	}
+
+	for (i = 1; ; i++) {
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/errors/error[%d]/uid", i);
+		str = _viesapi_parse_str(doc, xpath, NULL);
+
+		if (!str || strlen(str) == 0) {
+			break;
+		}
+
+		if (!vieserror_new(&ve)) {
+			batchresult_free(&result);
+			goto err;
+		}
+
+		ve->UID = str;
+		str = NULL;
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/errors/error[%d]/countryCode", i);
+		ve->CountryCode = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/errors/error[%d]/vatNumber", i);
+		ve->VATNumber = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/errors/error[%d]/error", i);
+		ve->Error = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/errors/error[%d]/date", i);
+		ve->Date = _viesapi_parse_date(doc, xpath);
+
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/errors/error[%d]/source", i);
+		ve->Source = _viesapi_parse_str(doc, xpath, NULL);
+
+		// add
+		result->ErrorsCount++;
+
+		if ((result->Errors = (VIESError**)realloc(result->Errors, sizeof(VIESError*) * result->ErrorsCount)) == NULL) {
+			batchresult_free(&result);
+			goto err;
+		}
+
+		result->Errors[result->ErrorsCount - 1] = ve;
+		ve = NULL;
+	}
+
+err:
+	if (doc) {
+		doc->lpVtbl->Release(doc);
+	}
+
+	viesdata_free(&vd);
+	vieserror_free(&ve);
+
+	if (str) {
+		free(str);
+	}
+
+	return result;
+}
+
 VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 {
 	IXMLDOMDocument2* doc = NULL;
@@ -897,15 +1276,15 @@ VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 
 	char url[MAX_STRING];
 
+	// clear error
+	_viesapi_clear_err(viesapi);
+
 	if (!viesapi) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
 		goto err;
 	}
 
-	// clear error
-	_viesapi_clear_err(viesapi);
-
-	// validate number and construct path
+	// construct path
 	snprintf(url, sizeof(url), "%s/check/account/status", viesapi->url);
 
 	// prepare request

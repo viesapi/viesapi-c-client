@@ -169,4 +169,108 @@ VIESAPI_API void viesdata_free(VIESData** vies);
 
 /////////////////////////////////////////////////////////////////
 
+/// <summary>
+/// VIES error
+/// </summary>
+typedef struct VIESError {
+
+	/// <summary>
+	/// Unique response ID
+	/// </summary>
+	char* UID;
+
+	/// <summary>
+	/// Country code (2-letters)
+	/// </summary>
+	char* CountryCode;
+
+	/// <summary>
+	/// VAT number
+	/// </summary>
+	char* VATNumber;
+
+	/// <summary>
+	/// Error description
+	/// </summary>
+	char* Error;
+
+	/// <summary>
+	/// Check date time
+	/// </summary>
+	time_t Date;
+
+	/// <summary>
+	/// The source of returned information
+	/// </summary>
+	char* Source;
+} VIESError;
+
+/////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// <summary>
+/// Create new object
+/// </summary>
+/// <param name="error">pointer to a new object</param>
+/// <returns>TRUE if succeeded</returns>
+VIESAPI_API BOOL vieserror_new(VIESError** error);
+
+/// <summary>
+/// Free data object
+/// </summary>
+/// <param name="error">pointer to an object to free</param>
+VIESAPI_API void vieserror_free(VIESError** error);
+
+#ifdef __cplusplus
+}
+#endif
+
+/////////////////////////////////////////////////////////////////
+
+/// <summary>
+/// Batch result
+/// </summary>
+typedef struct BatchResult {
+
+	/// <summary>
+	/// Valid VIES results
+	/// </summary>
+	VIESData** Numbers;
+	int NumbersCount;
+
+	/// <summary>
+	/// Failed VIES results
+	/// </summary>
+	VIESError** Errors;
+	int ErrorsCount;
+} BatchResult;
+
+/////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// <summary>
+/// Create new object
+/// </summary>
+/// <param name="result">pointer to a new object</param>
+/// <returns>TRUE if succeeded</returns>
+VIESAPI_API BOOL batchresult_new(BatchResult** result);
+
+/// <summary>
+/// Free data object
+/// </summary>
+/// <param name="result">pointer to an object to free</param>
+VIESAPI_API void batchresult_free(BatchResult** result);
+
+#ifdef __cplusplus
+}
+#endif
+
+/////////////////////////////////////////////////////////////////
+
 #endif

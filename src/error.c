@@ -30,12 +30,13 @@ static const char* _viesapi_codes[] = {
     /* VIESAPI_ERR_CLI_EUVAT */       "EU VAT ID is invalid",
     /* VIESAPI_ERR_CLI_EXCEPTION */   "Function generated an exception",
     /* VIESAPI_ERR_CLI_DATEFORMAT */  "Date has an invalid format",
-    /* VIESAPI_ERR_CLI_INPUT */       "Invalid input parameter"
+    /* VIESAPI_ERR_CLI_INPUT */       "Invalid input parameter",
+    /* VIESAPI_ERR_CLI_BATCH_SIZE */  "Batch size limit exceeded [2-99]"
 };
 
 VIESAPI_API const char* viesapi_errstr(int code)
 {
-    if (code < VIESAPI_ERR_CLI_CONNECT || code > VIESAPI_ERR_CLI_DATEFORMAT) {
+    if (code < VIESAPI_ERR_CLI_CONNECT || code > VIESAPI_ERR_CLI_BATCH_SIZE) {
         return NULL;
     }
 

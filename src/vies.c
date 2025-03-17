@@ -109,3 +109,90 @@ VIESAPI_API void viesdata_free(VIESData** vies)
 		*vies = NULL;
 	}
 }
+
+VIESAPI_API BOOL vieserror_new(VIESError** error)
+{
+	VIESError* ve = NULL;
+
+	BOOL ret = FALSE;
+
+	if ((ve = (VIESError*)malloc(sizeof(VIESError))) == NULL) {
+		goto err;
+	}
+
+	memset(ve, 0, sizeof(VIESError));
+
+	// ok
+	*error = ve;
+	ve = NULL;
+
+	ret = TRUE;
+
+err:
+	vieserror_free(&ve);
+
+	return ret;
+}
+
+VIESAPI_API void vieserror_free(VIESError** error)
+{
+	VIESError* ve = (error ? *error : NULL);
+
+	if (ve) {
+		free(ve->UID);
+
+		free(ve->CountryCode);
+		free(ve->VATNumber);
+
+		free(ve->Error);
+
+		free(ve->Source);
+
+		free(*error);
+		*error = NULL;
+	}
+}
+
+VIESAPI_API BOOL batchresult_new(BatchResult** result)
+{
+	BatchResult* br = NULL;
+
+	BOOL ret = FALSE;
+
+	if ((br = (BatchResult*)malloc(sizeof(BatchResult))) == NULL) {
+		goto err;
+	}
+
+	memset(br, 0, sizeof(BatchResult));
+
+	// ok
+	*result = br;
+	br = NULL;
+
+	ret = TRUE;
+
+err:
+	batchresult_free(&br);
+
+	return ret;
+}
+
+VIESAPI_API void batchresult_free(BatchResult** result)
+{
+	BatchResult* br = (result ? *result : NULL);
+
+	int i;
+
+	if (br) {
+		for (i = 0; i < br->NumbersCount; i++) {
+			viesdata_free(&br->Numbers[i]);
+		}
+
+		for (i = 0; i < br->ErrorsCount; i++) {
+			vieserror_free(&br->Errors[i]);
+		}
+
+		free(*result);
+		*result = NULL;
+	}
+}

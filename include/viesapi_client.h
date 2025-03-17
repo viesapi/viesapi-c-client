@@ -23,7 +23,7 @@
 
 /////////////////////////////////////////////////////////////////
 
-#define VIESAPI_VERSION			"1.2.7"
+#define VIESAPI_VERSION			"1.2.8"
 
 #define VIESAPI_PRODUCTION_URL	"https://viesapi.eu/api"
 
@@ -125,6 +125,23 @@ VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* 
 /// <param name="euvat">EU VAT number with 2-letter country prefix</param>
 /// <returns>VIES data or NULL in case of error</returns>
 VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const char* euvat);
+
+/// <summary>
+/// Upload batch of VAT numbers and get their current VAT statuses and traders data
+/// </summary>
+/// <param name="viesapi">client object</param>
+/// <param name="numbers">Array of EU VAT numbers with 2-letter country prefix</param>
+/// <param name="count">Number of EU VAT numbers in array</param>
+/// <returns>Batch token for checking status and getting the result or NULL in case of error</returns>
+VIESAPI_API char* viesapi_get_vies_data_async(VIESAPIClient* viesapi, const char* numbers[], int count);
+
+/// <summary>
+/// Check batch result and download data
+/// </summary>
+/// <param name="viesapi">client object</param>
+/// <param name="token">Batch token received from viesapi_get_vies_data_async function</param>
+/// <returns>Batch result or NULL in case of error</returns>
+VIESAPI_API BatchResult* viesapi_get_vies_data_async_result(VIESAPIClient* viesapi, const char* token);
 
 /// <summary>
 /// Get current account status
