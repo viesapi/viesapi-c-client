@@ -76,13 +76,18 @@ int main()
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
-	// Get VIES data from VIES system with parsed trader address components
+	// Get VIES data from VIES system with parsed trader name and address components
 	vies_parsed = viesapi_get_vies_data_parsed(viesapi, vat_eu);
 
 	if (vies_parsed != NULL) {
 		printf("Country:  %s\n", vies_parsed->CountryCode);
 		printf("VAT ID:   %s\n", vies_parsed->VATNumber);
 		printf("Is valid: %d\n", vies_parsed->Valid);
+
+		if (vies_parsed->TraderNameComponents) {
+			printf("LegalFormCanonicalId:      %d\n", vies_parsed->TraderNameComponents->LegalFormCanonicalId);
+			printf("LegalFormCanonicalName:    %s\n", vies_parsed->TraderNameComponents->LegalFormCanonicalName);
+		}
 
 		if (vies_parsed->TraderAddressComponents) {
 			printf("Country:      %s\n", vies_parsed->TraderAddressComponents->Country);

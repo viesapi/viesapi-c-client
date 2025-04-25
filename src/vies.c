@@ -21,6 +21,44 @@
 #include "internal.h"
 #include "viesapi.h"
 
+VIESAPI_API BOOL name_components_new(NameComponents** name)
+{
+	NameComponents* nc = NULL;
+
+	BOOL ret = FALSE;
+
+	if ((nc = (NameComponents*)malloc(sizeof(NameComponents))) == NULL) {
+		goto err;
+	}
+
+	memset(nc, 0, sizeof(NameComponents));
+
+	// ok
+	*name = nc;
+	nc = NULL;
+
+	ret = TRUE;
+
+err:
+	name_components_free(&nc);
+
+	return ret;
+}
+
+VIESAPI_API void name_components_free(NameComponents** name)
+{
+	NameComponents* nc = (name ? *name : NULL);
+
+	if (nc) {
+		free(nc->Name);
+		free(nc->LegalForm);
+		free(nc->LegalFormCanonicalName);
+
+		free(*name);
+		*name = NULL;
+	}
+}
+
 VIESAPI_API BOOL address_components_new(AddressComponents** addr)
 {
 	AddressComponents* ac = NULL;
@@ -97,6 +135,9 @@ VIESAPI_API void viesdata_free(VIESData** vies)
 		free(vd->VATNumber);
 
 		free(vd->TraderName);
+
+		name_components_free(&vd->TraderNameComponents);
+
 		free(vd->TraderCompanyType);
 		free(vd->TraderAddress);
 

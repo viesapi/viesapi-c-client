@@ -24,6 +24,83 @@
 /////////////////////////////////////////////////////////////////
 
 /// <summary>
+/// Legal forms
+/// </summary>
+typedef enum LegalForm {
+	UNKNOWN = 0,
+	SOLE_PROPRIETORSHIP = 1,
+	LIMITED_LIABILITY_COMPANY = 2,
+	GENERAL_PARTNERSHIP = 3,
+	JOINT_STOCK_COMPANY = 4,
+	LIMITED_PARTNERSHIP = 5,
+	PRIVATE_LIMITED_LIABILITY_COMPANY = 6,
+	SINGLE_MEMBER_JOINT_STOCK_COMPANY = 7,
+	SIMPLE_LIMITED_LIABILITY_COMPANY = 8,
+	SINGLE_MEMBER_LIMITED_LIABILITY_COMPANY = 9,
+	SIMPLIFIED_JOINT_STOCK_COMPANY = 10,
+	SMALL_COMPANY = 11,
+	LIMITED_JOINT_STOCK_PARTNERSHIP = 12,
+	PROFESSIONAL_PARTNERSHIP = 13,
+	LIMITED_LIABILITY_PARTNERSHIP = 14,
+	PRIVATE_PARTNERSHIP = 15,
+	LIMITED_LIABILITY_COMPANY_LIMITED_PARTNERSHIP = 16,
+	LIMITED_LIABILITY_COMPANY_LIMITED_JOINT_STOCK_PARTNERSHIP = 17,
+	PUBLIC_INSTITUTION = 18
+} LegalForm;
+
+/////////////////////////////////////////////////////////////////
+
+ /// <summary>
+ /// Name components
+ /// </summary>
+typedef struct NameComponents {
+	/// <summary>
+	/// Trader name
+	/// </summary>
+	char* Name;
+
+	/// <summary>
+	/// Legal form name
+	/// </summary>
+	char* LegalForm;
+
+	/// <summary>
+	/// Legal form canonical id
+	/// </summary>
+	LegalForm LegalFormCanonicalId;
+
+	/// <summary>
+	/// Legal form canonical name
+	/// </summary>
+	char* LegalFormCanonicalName;
+} NameComponents;
+
+/////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// <summary>
+/// Create new object
+/// </summary>
+/// <param name="addr">pointer to a new object</param>
+/// <returns>TRUE if succeeded</returns>
+VIESAPI_API BOOL name_components_new(NameComponents** name);
+
+/// <summary>
+/// Free data object
+/// </summary>
+/// <param name="addr">pointer to an object to free</param>
+VIESAPI_API void name_components_free(NameComponents** name);
+
+#ifdef __cplusplus
+}
+#endif
+
+/////////////////////////////////////////////////////////////////
+
+/// <summary>
 /// Address components
 /// </summary>
 typedef struct AddressComponents {
@@ -112,6 +189,11 @@ typedef struct VIESData {
 	/// Trader name
 	/// </summary>
 	char* TraderName;
+
+	/// <summary>
+	/// Trader name parsed into components
+	/// </summary>
+	NameComponents* TraderNameComponents;
 
 	/// <summary>
 	/// Trader company type

@@ -917,7 +917,7 @@ VIESAPI_API char* viesapi_get_last_err(VIESAPIClient* viesapi)
 VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* euvat)
 {
 	IXMLDOMDocument2* doc = NULL;
-	VIESData* vies = NULL;
+	VIESData* v = NULL;
 
 	char url[MAX_STRING];
 
@@ -942,40 +942,42 @@ VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* 
 	}
 
 	// parse response
-	if (!viesdata_new(&vies)) {
+	if (!viesdata_new(&v)) {
 		goto err;
 	}
 
-	vies->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
+	v->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
 
-	vies->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
-	vies->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
+	v->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
+	v->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
 
-	vies->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
+	v->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
 
-	vies->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
-	vies->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
-	vies->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
+	v->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
+	v->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
+	v->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
 
-	vies->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
-	vies->Date = _viesapi_parse_date(doc, L"/result/vies/date");
-	vies->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
+	v->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
+	v->Date = _viesapi_parse_date(doc, L"/result/vies/date");
+	v->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
 
 err:
 	if (doc) {
 		doc->lpVtbl->Release(doc);
 	}
 
-	return vies;
+	return v;
 }
 
 VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const char* euvat)
 {
 	IXMLDOMDocument2* doc = NULL;
 	VIESData* vies = NULL;
+	VIESData* v = NULL;
 
 	char url[MAX_STRING];
 
+	char* name = NULL;
 	char* country = NULL;
 
 	// clear error
@@ -999,45 +1001,70 @@ VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const
 	}
 
 	// parse response
-	if (!viesdata_new(&vies)) {
+	if (!viesdata_new(&v)) {
 		goto err;
 	}
 
-	vies->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
+	v->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
 
-	vies->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
-	vies->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
+	v->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
+	v->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
 
-	vies->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
+	v->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
 
-	vies->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
-	vies->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
-	vies->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
+	v->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
+
+	name = _viesapi_parse_str(doc, L"/result/vies/traderNameComponents/name", NULL);
+
+	if (name && strlen(name) > 0) {
+		if (!name_components_new(&v->TraderNameComponents)) {
+			goto err;
+		}
+
+		v->TraderNameComponents->Name = name;
+		name = NULL;
+
+		v->TraderNameComponents->LegalForm = _viesapi_parse_str(doc, L"/result/vies/traderNameComponents/legalForm", NULL);
+		v->TraderNameComponents->LegalFormCanonicalId = _viesapi_parse_int(doc, L"/result/vies/traderNameComponents/legalFormCanonicalId", UNKNOWN);
+		v->TraderNameComponents->LegalFormCanonicalName = _viesapi_parse_str(doc, L"/result/vies/traderNameComponents/legalFormCanonicalName", NULL);
+	}
+
+	v->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
+	v->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
 
 	country = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/country", NULL);
 
 	if (country && strlen(country) > 0) {
-		if (!address_components_new(&vies->TraderAddressComponents)) {
+		if (!address_components_new(&v->TraderAddressComponents)) {
 			goto err;
 		}
 
-		vies->TraderAddressComponents->Country = country;
+		v->TraderAddressComponents->Country = country;
 		country = NULL;
 
-		vies->TraderAddressComponents->PostalCode = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/postalCode", NULL);
-		vies->TraderAddressComponents->City = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/city", NULL);
-		vies->TraderAddressComponents->Street = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/street", NULL);
-		vies->TraderAddressComponents->StreetNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/streetNumber", NULL);
-		vies->TraderAddressComponents->HouseNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/houseNumber", NULL);
+		v->TraderAddressComponents->PostalCode = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/postalCode", NULL);
+		v->TraderAddressComponents->City = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/city", NULL);
+		v->TraderAddressComponents->Street = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/street", NULL);
+		v->TraderAddressComponents->StreetNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/streetNumber", NULL);
+		v->TraderAddressComponents->HouseNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/houseNumber", NULL);
 	}
 
-	vies->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
-	vies->Date = _viesapi_parse_date(doc, L"/result/vies/date");
-	vies->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
+	v->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
+	v->Date = _viesapi_parse_date(doc, L"/result/vies/date");
+	v->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
+
+	vies = v;
+	v = NULL;
 
 err:
 	if (doc) {
 		doc->lpVtbl->Release(doc);
+	}
+
+	viesdata_free(&v);
+
+	if (name) {
+		free(name);
 	}
 
 	if (country) {

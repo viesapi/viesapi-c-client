@@ -23,7 +23,7 @@
 
 /////////////////////////////////////////////////////////////////
 
-#define VIESAPI_VERSION			"1.2.8"
+#define VIESAPI_VERSION			"1.2.9"
 
 #define VIESAPI_PRODUCTION_URL	"https://viesapi.eu/api"
 
