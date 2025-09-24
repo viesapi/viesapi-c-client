@@ -229,8 +229,7 @@ static BOOL _viesapi_get_agent_header(VIESAPIClient* viesapi, BSTR* bstr)
 
 	if (viesapi->app && strlen(viesapi->app) > 0) {
 		snprintf(str, sizeof(str), "%s VIESAPIClient/%s C/%s", viesapi->app, VIESAPI_VERSION, "Windows");
-	}
-	else {
+	} else {
 		snprintf(str, sizeof(str), "VIESAPIClient/%s C/%s", VIESAPI_VERSION, "Windows");
 	}
 
@@ -340,8 +339,7 @@ static BOOL _viesapi_get_path_suffix(VIESAPIClient* viesapi, Number type, const 
 		strcat(path, n);
 
 		free(n);
-	}
-	else if (type == NIP) {
+	} else if (type == NIP) {
 		if (!viesapi_nip_is_valid(number)) {
 			_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_NIP, NULL);
 			return FALSE;
@@ -353,8 +351,7 @@ static BOOL _viesapi_get_path_suffix(VIESAPIClient* viesapi, Number type, const 
 		strcat(path, n);
 
 		free(n);
-	}
-	else {
+	} else {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_NUMBER, NULL);
 		return FALSE;
 	}
@@ -560,6 +557,125 @@ static BOOL _viesapi_parse_bool(IXMLDOMDocument2* doc, BSTR xpath, BOOL def)
 }
 
 /// <summary>
+/// Parse VIES data from the document
+/// </summary>
+/// <param name="doc">document object</param>
+/// <param name="prefix">XPath prefix</param>
+/// <returns>data object</returns>
+static VIESData* _viesapi_parse_vies_data(IXMLDOMDocument2* doc, const wchar_t* prefix)
+{
+	VIESData* vies = NULL;
+	VIESData* v = NULL;
+
+	wchar_t xpath[MAX_STRING];
+
+	char* name = NULL;
+	char* country = NULL;
+
+	// parse response
+	if (!viesdata_new(&v)) {
+		goto err;
+	}
+
+	_snwprintf(xpath, MAX_STRING, L"%s/uid", prefix);
+	v->UID = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/countryCode", prefix);
+	v->CountryCode = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/vatNumber", prefix);
+	v->VATNumber = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/valid", prefix);
+	v->Valid = _viesapi_parse_bool(doc, xpath, FALSE);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/traderName", prefix);
+	v->TraderName = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/traderNameComponents/name", prefix);
+	name = _viesapi_parse_str(doc, xpath, NULL);
+
+	if (name && strlen(name) > 0) {
+		if (!name_components_new(&v->TraderNameComponents)) {
+			goto err;
+		}
+
+		v->TraderNameComponents->Name = name;
+		name = NULL;
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderNameComponents/legalForm", prefix);
+		v->TraderNameComponents->LegalForm = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderNameComponents/legalFormCanonicalId", prefix);
+		v->TraderNameComponents->LegalFormCanonicalId = _viesapi_parse_int(doc, xpath, UNKNOWN);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderNameComponents/legalFormCanonicalName", prefix);
+		v->TraderNameComponents->LegalFormCanonicalName = _viesapi_parse_str(doc, xpath, NULL);
+	}
+
+	_snwprintf(xpath, MAX_STRING, L"%s/traderCompanyType", prefix);
+	v->TraderCompanyType = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/traderAddress", prefix);
+	v->TraderAddress = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/country", prefix);
+	country = _viesapi_parse_str(doc, xpath, NULL);
+
+	if (country && strlen(country) > 0) {
+		if (!address_components_new(&v->TraderAddressComponents)) {
+			goto err;
+		}
+
+		v->TraderAddressComponents->Country = country;
+		country = NULL;
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/postalCode", prefix);
+		v->TraderAddressComponents->PostalCode = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/city", prefix);
+		v->TraderAddressComponents->City = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/street", prefix);
+		v->TraderAddressComponents->Street = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/streetNumber", prefix);
+		v->TraderAddressComponents->StreetNumber = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/houseNumber", prefix);
+		v->TraderAddressComponents->HouseNumber = _viesapi_parse_str(doc, xpath, NULL);
+
+		_snwprintf(xpath, MAX_STRING, L"%s/traderAddressComponents/other", prefix);
+		v->TraderAddressComponents->Other = _viesapi_parse_str(doc, xpath, NULL);
+	}
+
+	_snwprintf(xpath, MAX_STRING, L"%s/id", prefix);
+	v->ID = _viesapi_parse_str(doc, xpath, NULL);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/date", prefix);
+	v->Date = _viesapi_parse_date(doc, xpath);
+
+	_snwprintf(xpath, MAX_STRING, L"%s/source", prefix);
+	v->Source = _viesapi_parse_str(doc, xpath, NULL);
+
+	vies = v;
+	v = NULL;
+
+err:
+	viesdata_free(&v);
+
+	if (name) {
+		free(name);
+	}
+
+	if (country) {
+		free(country);
+	}
+
+	return vies;
+}
+
+/// <summary>
 /// Perform HTTP GET
 /// </summary>
 /// <param name="viesapi">client object</param>
@@ -669,8 +785,7 @@ err:
 	if (code && strlen(code) > 0) {
 		_viesapi_set_err(viesapi, atoi(code), _viesapi_parse_str(*doc, L"/result/error/description", NULL));
 		ret = FALSE;
-	}
-	else if (!ret) {
+	} else if (!ret) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_CONNECT, NULL);
 	}
 
@@ -819,8 +934,7 @@ err:
 	if (code && strlen(code) > 0) {
 		_viesapi_set_err(viesapi, atoi(code), _viesapi_parse_str(*doc, L"/result/error/description", NULL));
 		ret = FALSE;
-	}
-	else if (!ret) {
+	} else if (!ret) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_CONNECT, NULL);
 	}
 
@@ -917,7 +1031,7 @@ VIESAPI_API char* viesapi_get_last_err(VIESAPIClient* viesapi)
 VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* euvat)
 {
 	IXMLDOMDocument2* doc = NULL;
-	VIESData* v = NULL;
+	VIESData* vd = NULL;
 
 	char url[MAX_STRING];
 
@@ -942,43 +1056,22 @@ VIESAPI_API VIESData* viesapi_get_vies_data(VIESAPIClient* viesapi, const char* 
 	}
 
 	// parse response
-	if (!viesdata_new(&v)) {
-		goto err;
-	}
-
-	v->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
-
-	v->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
-	v->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
-
-	v->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
-
-	v->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
-	v->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
-	v->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
-
-	v->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
-	v->Date = _viesapi_parse_date(doc, L"/result/vies/date");
-	v->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
+	vd = _viesapi_parse_vies_data(doc, L"/result/vies");
 
 err:
 	if (doc) {
 		doc->lpVtbl->Release(doc);
 	}
 
-	return v;
+	return vd;
 }
 
 VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const char* euvat)
 {
 	IXMLDOMDocument2* doc = NULL;
-	VIESData* vies = NULL;
-	VIESData* v = NULL;
+	VIESData* vd = NULL;
 
 	char url[MAX_STRING];
-
-	char* name = NULL;
-	char* country = NULL;
 
 	// clear error
 	_viesapi_clear_err(viesapi);
@@ -1001,77 +1094,14 @@ VIESAPI_API VIESData* viesapi_get_vies_data_parsed(VIESAPIClient* viesapi, const
 	}
 
 	// parse response
-	if (!viesdata_new(&v)) {
-		goto err;
-	}
-
-	v->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
-
-	v->CountryCode = _viesapi_parse_str(doc, L"/result/vies/countryCode", NULL);
-	v->VATNumber = _viesapi_parse_str(doc, L"/result/vies/vatNumber", NULL);
-
-	v->Valid = _viesapi_parse_bool(doc, L"/result/vies/valid", FALSE);
-
-	v->TraderName = _viesapi_parse_str(doc, L"/result/vies/traderName", NULL);
-
-	name = _viesapi_parse_str(doc, L"/result/vies/traderNameComponents/name", NULL);
-
-	if (name && strlen(name) > 0) {
-		if (!name_components_new(&v->TraderNameComponents)) {
-			goto err;
-		}
-
-		v->TraderNameComponents->Name = name;
-		name = NULL;
-
-		v->TraderNameComponents->LegalForm = _viesapi_parse_str(doc, L"/result/vies/traderNameComponents/legalForm", NULL);
-		v->TraderNameComponents->LegalFormCanonicalId = _viesapi_parse_int(doc, L"/result/vies/traderNameComponents/legalFormCanonicalId", UNKNOWN);
-		v->TraderNameComponents->LegalFormCanonicalName = _viesapi_parse_str(doc, L"/result/vies/traderNameComponents/legalFormCanonicalName", NULL);
-	}
-
-	v->TraderCompanyType = _viesapi_parse_str(doc, L"/result/vies/traderCompanyType", NULL);
-	v->TraderAddress = _viesapi_parse_str(doc, L"/result/vies/traderAddress", NULL);
-
-	country = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/country", NULL);
-
-	if (country && strlen(country) > 0) {
-		if (!address_components_new(&v->TraderAddressComponents)) {
-			goto err;
-		}
-
-		v->TraderAddressComponents->Country = country;
-		country = NULL;
-
-		v->TraderAddressComponents->PostalCode = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/postalCode", NULL);
-		v->TraderAddressComponents->City = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/city", NULL);
-		v->TraderAddressComponents->Street = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/street", NULL);
-		v->TraderAddressComponents->StreetNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/streetNumber", NULL);
-		v->TraderAddressComponents->HouseNumber = _viesapi_parse_str(doc, L"/result/vies/traderAddressComponents/houseNumber", NULL);
-	}
-
-	v->ID = _viesapi_parse_str(doc, L"/result/vies/id", NULL);
-	v->Date = _viesapi_parse_date(doc, L"/result/vies/date");
-	v->Source = _viesapi_parse_str(doc, L"/result/vies/source", NULL);
-
-	vies = v;
-	v = NULL;
+	vd = _viesapi_parse_vies_data(doc, L"/result/vies");
 
 err:
 	if (doc) {
 		doc->lpVtbl->Release(doc);
 	}
 
-	viesdata_free(&v);
-
-	if (name) {
-		free(name);
-	}
-
-	if (country) {
-		free(country);
-	}
-
-	return vies;
+	return vd;
 }
 
 VIESAPI_API char* viesapi_get_vies_data_async(VIESAPIClient* viesapi, const char* numbers[], int count)
@@ -1090,7 +1120,7 @@ VIESAPI_API char* viesapi_get_vies_data_async(VIESAPIClient* viesapi, const char
 	// clear error
 	_viesapi_clear_err(viesapi);
 
-	if (!viesapi || !numbers || count < 2 || count > 99) {
+	if (!viesapi || !numbers || count < 3 || count > 99) {
 		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_BATCH_SIZE, NULL);
 		goto err;
 	}
@@ -1183,6 +1213,8 @@ VIESAPI_API BatchResult* viesapi_get_vies_data_async_result(VIESAPIClient* viesa
 		goto err;
 	}
 
+	result->UID = _viesapi_parse_str(doc, L"/result/batch/uid", NULL);
+
 	for (i = 1; ; i++) {
 		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/uid", i);
 		str = _viesapi_parse_str(doc, xpath, NULL);
@@ -1191,40 +1223,16 @@ VIESAPI_API BatchResult* viesapi_get_vies_data_async_result(VIESAPIClient* viesa
 			break;
 		}
 
-		if (!viesdata_new(&vd)) {
+		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]", i);
+		vd = _viesapi_parse_vies_data(doc, xpath);
+
+		if (!vd) {
 			batchresult_free(&result);
 			goto err;
 		}
 
-		vd->UID = str;
+		free(str);
 		str = NULL;
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/countryCode", i);
-		vd->CountryCode = _viesapi_parse_str(doc, xpath, NULL);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/vatNumber", i);
-		vd->VATNumber = _viesapi_parse_str(doc, xpath, NULL);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/valid", i);
-		vd->Valid = _viesapi_parse_bool(doc, xpath, FALSE);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/traderName", i);
-		vd->TraderName = _viesapi_parse_str(doc, xpath, NULL);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/traderCompanyType", i);
-		vd->TraderCompanyType = _viesapi_parse_str(doc, xpath, NULL);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/traderAddress", i);
-		vd->TraderAddress = _viesapi_parse_str(doc, xpath, NULL);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/id", i);
-		vd->ID = _viesapi_parse_str(doc, xpath, NULL);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/date", i);
-		vd->Date = _viesapi_parse_date(doc, xpath);
-
-		_snwprintf(xpath, MAX_STRING, L"/result/batch/numbers/vies[%d]/source", i);
-		vd->Source = _viesapi_parse_str(doc, xpath, NULL);
 
 		// add
 		result->NumbersCount++;
@@ -1355,6 +1363,89 @@ VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi)
 err:
 	if (doc) {
 		doc->lpVtbl->Release(doc);
+	}
+
+	return status;
+}
+
+VIESAPI_API VIESStatus* viesapi_get_vies_status(VIESAPIClient* viesapi)
+{
+	IXMLDOMDocument2* doc = NULL;
+	VIESStatus* status = NULL;
+	CountryStatus* cs = NULL;
+
+	wchar_t xpath[MAX_STRING];
+
+	char url[MAX_STRING];
+
+	char* str = NULL;
+
+	int i;
+
+	// clear error
+	_viesapi_clear_err(viesapi);
+
+	if (!viesapi) {
+		_viesapi_set_err(viesapi, VIESAPI_ERR_CLI_INPUT, NULL);
+		goto err;
+	}
+
+	// construct path
+	snprintf(url, sizeof(url), "%s/check/vies/status", viesapi->url);
+
+	// prepare request
+	if (!_viesapi_http_get(viesapi, url, &doc)) {
+		goto err;
+	}
+
+	// parse response
+	if (!viesstatus_new(&status)) {
+		goto err;
+	}
+
+	status->UID = _viesapi_parse_str(doc, L"/result/vies/uid", NULL);
+	status->Available = _viesapi_parse_bool(doc, L"/result/vies/available", FALSE);
+
+	for (i = 1; ; i++) {
+		_snwprintf(xpath, MAX_STRING, L"/result/vies/countries/country[%d]/countryCode", i);
+		str = _viesapi_parse_str(doc, xpath, NULL);
+
+		if (!str || strlen(str) == 0) {
+			break;
+		}
+
+		if (!country_status_new(&cs)) {
+			viesstatus_free(&status);
+			goto err;
+		}
+
+		cs->CountryCode = str;
+		str = NULL;
+
+		_snwprintf(xpath, MAX_STRING, L"/result/vies/countries/country[%d]/status", i);
+		cs->Status = _viesapi_parse_str(doc, xpath, NULL);
+
+		// add
+		status->CountriesCount++;
+
+		if ((status->Countries = (CountryStatus**)realloc(status->Countries, sizeof(CountryStatus*) * status->CountriesCount)) == NULL) {
+			viesstatus_free(&status);
+			goto err;
+		}
+
+		status->Countries[status->CountriesCount - 1] = cs;
+		cs = NULL;
+	}
+
+err:
+	if (doc) {
+		doc->lpVtbl->Release(doc);
+	}
+
+	country_status_free(&cs);
+
+	if (str) {
+		free(str);
 	}
 
 	return status;

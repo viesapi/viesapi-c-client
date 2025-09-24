@@ -188,8 +188,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 3, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "BE", 2) == 0) {
+	} else if (strncmp(num, "BE", 2) == 0) {
 		// BE[0-1]{1}\d{9}
 		if (len != (3 + 9) || (num[2] != '0' && num[2] != '1')) {
 			goto err;
@@ -198,8 +197,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 3, 9)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "BG", 2) == 0) {
+	} else if (strncmp(num, "BG", 2) == 0) {
 		// BG\\d{9,10}
 		if (len < (2 + 9) || len > (2 + 10)) {
 			goto err;
@@ -208,8 +206,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, len - 2)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "CY", 2) == 0) {
+	} else if (strncmp(num, "CY", 2) == 0) {
 		// CY\d{8}[A-Z]{1}
 		if (len != (2 + 8 + 1) || !isalpha(num[len - 1])) {
 			goto err;
@@ -218,8 +215,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "CZ", 2) == 0) {
+	} else if (strncmp(num, "CZ", 2) == 0) {
 		// CZ\\d{8,10}
 		if (len < (2 + 8) || len > (2 + 10)) {
 			goto err;
@@ -228,8 +224,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, len - 2)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "DE", 2) == 0) {
+	} else if (strncmp(num, "DE", 2) == 0) {
 		// DE\\d{9}
 		if (len != (2 + 9)) {
 			goto err;
@@ -238,8 +233,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 9)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "DK", 2) == 0) {
+	} else if (strncmp(num, "DK", 2) == 0) {
 		// DK\\d{8}
 		if (len != (2 + 8)) {
 			goto err;
@@ -248,8 +242,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "EE", 2) == 0) {
+	} else if (strncmp(num, "EE", 2) == 0) {
 		// EE\\d{9}
 		if (len != (2 + 9)) {
 			goto err;
@@ -258,8 +251,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 9)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "EL", 2) == 0) {
+	} else if (strncmp(num, "EL", 2) == 0) {
 		// EL\\d{9}
 		if (len != (2 + 9)) {
 			goto err;
@@ -268,8 +260,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 9)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "ES", 2) == 0) {
+	} else if (strncmp(num, "ES", 2) == 0) {
 		// ES[A-Z0-9]{1}\d{7}[A-Z0-9]{1}
 		if (len != (2 + 1 + 7 + 1)) {
 			goto err;
@@ -286,8 +277,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isalnum(num, 10, 1)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "FI", 2) == 0) {
+	} else if (strncmp(num, "FI", 2) == 0) {
 		// FI\\d{8}
 		if (len != (2 + 8)) {
 			goto err;
@@ -296,8 +286,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "FR", 2) == 0) {
+	} else if (strncmp(num, "FR", 2) == 0) {
 		// FR[A-Z0-9]{2}\\d{9}
 		if (len != (2 + 2 + 9)) {
 			goto err;
@@ -310,8 +299,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 4, 9)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "HR", 2) == 0) {
+	} else if (strncmp(num, "HR", 2) == 0) {
 		// HR\\d{11}
 		if (len != (2 + 11)) {
 			goto err;
@@ -320,8 +308,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 11)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "HU", 2) == 0) {
+	} else if (strncmp(num, "HU", 2) == 0) {
 		// HU\\d{8}
 		if (len != (2 + 8)) {
 			goto err;
@@ -330,8 +317,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "IE", 2) == 0) {
+	} else if (strncmp(num, "IE", 2) == 0) {
 		// IE[A-Z0-9+*]{8,9}
 		if (len < (2 + 8) || len > (2 + 9)) {
 			goto err;
@@ -340,8 +326,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isalnum_ext(num, 2, len - 2)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "IT", 2) == 0) {
+	} else if (strncmp(num, "IT", 2) == 0) {
 		// IT\\d{11}
 		if (len != (2 + 11)) {
 			goto err;
@@ -350,8 +335,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 11)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "LT", 2) == 0) {
+	} else if (strncmp(num, "LT", 2) == 0) {
 		// LT\\d{9,12}
 		if (len < (2 + 9) || len > (2 + 12)) {
 			goto err;
@@ -360,8 +344,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, len - 2)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "LU", 2) == 0) {
+	} else if (strncmp(num, "LU", 2) == 0) {
 		// LU\\d{8}
 		if (len != (2 + 8)) {
 			goto err;
@@ -370,8 +353,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "LV", 2) == 0) {
+	} else if (strncmp(num, "LV", 2) == 0) {
 		// LV\\d{11}
 		if (len != (2 + 11)) {
 			goto err;
@@ -380,8 +362,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 11)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "MT", 2) == 0) {
+	} else if (strncmp(num, "MT", 2) == 0) {
 		// MT\\d{8}
 		if (len != (2 + 8)) {
 			goto err;
@@ -390,8 +371,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "NL", 2) == 0) {
+	} else if (strncmp(num, "NL", 2) == 0) {
 		// NL[A-Z0-9+*]{12}
 		if (len != (2 + 12)) {
 			goto err;
@@ -400,8 +380,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isalnum_ext(num, 2, 12)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "PL", 2) == 0) {
+	} else if (strncmp(num, "PL", 2) == 0) {
 		// PL\\d{10}
 		if (len != (2 + 10)) {
 			goto err;
@@ -410,8 +389,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 10)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "PT", 2) == 0) {
+	} else if (strncmp(num, "PT", 2) == 0) {
 		// PT\\d{9}
 		if (len != (2 + 9)) {
 			goto err;
@@ -420,8 +398,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 9)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "RO", 2) == 0) {
+	} else if (strncmp(num, "RO", 2) == 0) {
 		// RO\\d{2,10}
 		if (len < (2 + 2) || len > (2 + 10)) {
 			goto err;
@@ -430,8 +407,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, len - 2)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "SE", 2) == 0) {
+	} else if (strncmp(num, "SE", 2) == 0) {
 		// SE\\d{12}
 		if (len != (2 + 12)) {
 			goto err;
@@ -440,8 +416,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 12)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "SI", 2) == 0) {
+	} else if (strncmp(num, "SI", 2) == 0) {
 		// SI\\d{8}
 		if (len != (2 + 8)) {
 			goto err;
@@ -450,8 +425,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 8)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "SK", 2) == 0) {
+	} else if (strncmp(num, "SK", 2) == 0) {
 		// SK\\d{10}
 		if (len != (2 + 10)) {
 			goto err;
@@ -460,8 +434,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isdigit(num, 2, 10)) {
 			goto err;
 		}
-	}
-	else if (strncmp(num, "XI", 2) == 0) {
+	} else if (strncmp(num, "XI", 2) == 0) {
 		// XI[A-Z0-9]{5,12}
 		if (len < (2 + 5) || len > (2 + 12)) {
 			goto err;
@@ -470,8 +443,7 @@ VIESAPI_API BOOL viesapi_euvat_is_valid(const char* euvat)
 		if (!_viesapi_isalnum(num, 2, len - 2)) {
 			goto err;
 		}
-	}
-	else {
+	} else {
 		goto err;
 	}
 

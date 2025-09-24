@@ -23,7 +23,7 @@
 
 /////////////////////////////////////////////////////////////////
 
-#define VIESAPI_VERSION			"1.2.9"
+#define VIESAPI_VERSION			"1.3.0"
 
 #define VIESAPI_PRODUCTION_URL	"https://viesapi.eu/api"
 
@@ -149,6 +149,13 @@ VIESAPI_API BatchResult* viesapi_get_vies_data_async_result(VIESAPIClient* viesa
 /// <param name="viesapi">client object</param>
 /// <returns>account status or NULL in case of error</returns>
 VIESAPI_API AccountStatus* viesapi_get_account_status(VIESAPIClient* viesapi);
+
+/// <summary>
+/// Get current EU VIES system status
+/// </summary>
+/// <param name="viesapi">client object</param>
+/// <returns>VIES status or NULL in case of error</returns>
+VIESAPI_API VIESStatus* viesapi_get_vies_status(VIESAPIClient* viesapi);
 
 #ifdef __cplusplus
 }

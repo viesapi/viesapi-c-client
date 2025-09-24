@@ -133,6 +133,11 @@ typedef struct AddressComponents {
 	/// House number
 	/// </summary>
 	char* HouseNumber;
+
+	/// <summary>
+	/// Other address details (area name, building name, floor number, etc.)
+	/// </summary>
+	char* Other;
 } AddressComponents;
  
 /////////////////////////////////////////////////////////////////
@@ -153,6 +158,97 @@ VIESAPI_API BOOL address_components_new(AddressComponents** addr);
 /// </summary>
 /// <param name="addr">pointer to an object to free</param>
 VIESAPI_API void address_components_free(AddressComponents** addr);
+
+#ifdef __cplusplus
+}
+#endif
+
+/////////////////////////////////////////////////////////////////
+
+#define COUNTRY_STATUS_UNKNOWN			"Unknown"
+#define COUNTRY_STATUS_AVAILABLE		"Available"
+#define COUNTRY_STATUS_UNAVAILABLE		"Unavailable"
+
+/// <summary>
+/// EU member country status
+/// </summary>
+typedef struct CountryStatus {
+	/// <summary>
+	/// Country code (2-letters)
+	/// </summary>
+	char* CountryCode;
+
+	/// <summary>
+	/// Country status
+	/// </summary>
+	char* Status;
+} CountryStatus;
+
+/////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// <summary>
+/// Create new object
+/// </summary>
+/// <param name="status">pointer to a new object</param>
+/// <returns>TRUE if succeeded</returns>
+VIESAPI_API BOOL country_status_new(CountryStatus** status);
+
+/// <summary>
+/// Free data object
+/// </summary>
+/// <param name="status">pointer to an object to free</param>
+VIESAPI_API void country_status_free(CountryStatus** status);
+
+#ifdef __cplusplus
+}
+#endif
+
+/////////////////////////////////////////////////////////////////
+
+/// <summary>
+/// VIES error
+/// </summary>
+typedef struct VIESStatus {
+
+	/// <summary>
+	/// Unique response ID
+	/// </summary>
+	char* UID;
+
+	/// <summary>
+	/// Availability flag
+	/// </summary>
+	BOOL Available;
+
+	/// <summary>
+	/// List of member countries
+	/// </summary>
+	CountryStatus** Countries;
+	int CountriesCount;
+} VIESStatus;
+
+/////////////////////////////////////////////////////////////////
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// <summary>
+/// Create new object
+/// </summary>
+/// <param name="status">pointer to a new object</param>
+/// <returns>TRUE if succeeded</returns>
+VIESAPI_API BOOL viesstatus_new(VIESStatus** status);
+
+/// <summary>
+/// Free data object
+/// </summary>
+/// <param name="status">pointer to an object to free</param>
+VIESAPI_API void viesstatus_free(VIESStatus** status);
 
 #ifdef __cplusplus
 }
@@ -316,6 +412,11 @@ VIESAPI_API void vieserror_free(VIESError** error);
 /// Batch result
 /// </summary>
 typedef struct BatchResult {
+
+	/// <summary>
+	/// Unique response ID
+	/// </summary>
+	char* UID;
 
 	/// <summary>
 	/// Valid VIES results

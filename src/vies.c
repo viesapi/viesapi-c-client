@@ -94,9 +94,89 @@ VIESAPI_API void address_components_free(AddressComponents** addr)
 		free(ac->Street);
 		free(ac->StreetNumber);
 		free(ac->HouseNumber);
+		free(ac->Other);
 
 		free(*addr);
 		*addr = NULL;
+	}
+}
+
+VIESAPI_API BOOL country_status_new(CountryStatus** status)
+{
+	CountryStatus* cs = NULL;
+
+	BOOL ret = FALSE;
+
+	if ((cs = (CountryStatus*)malloc(sizeof(CountryStatus))) == NULL) {
+		goto err;
+	}
+
+	memset(cs, 0, sizeof(CountryStatus));
+
+	// ok
+	*status = cs;
+	cs = NULL;
+
+	ret = TRUE;
+
+err:
+	country_status_free(&cs);
+
+	return ret;
+}
+
+VIESAPI_API void country_status_free(CountryStatus** status)
+{
+	CountryStatus* cs = (status ? *status : NULL);
+
+	if (cs) {
+		free(cs->CountryCode);
+		free(cs->Status);
+
+		free(*status);
+		*status = NULL;
+	}
+}
+
+VIESAPI_API BOOL viesstatus_new(VIESStatus** status)
+{
+	VIESStatus* vs = NULL;
+
+	BOOL ret = FALSE;
+
+	if ((vs = (VIESStatus*)malloc(sizeof(VIESStatus))) == NULL) {
+		goto err;
+	}
+
+	memset(vs, 0, sizeof(VIESStatus));
+
+	// ok
+	*status = vs;
+	vs = NULL;
+
+	ret = TRUE;
+
+err:
+	viesstatus_free(&vs);
+
+	return ret;
+}
+
+VIESAPI_API void viesstatus_free(VIESStatus** status)
+{
+	VIESStatus* vs = (status ? *status : NULL);
+
+	int i;
+
+	if (vs) {
+		free(vs->UID);
+
+		for (i = 0; i < vs->CountriesCount; i++) {
+			country_status_free(&vs->Countries[i]);
+		}
+
+		free(*status);
+		*status = NULL;
 	}
 }
 
@@ -225,6 +305,8 @@ VIESAPI_API void batchresult_free(BatchResult** result)
 	int i;
 
 	if (br) {
+		free(br->UID);
+
 		for (i = 0; i < br->NumbersCount; i++) {
 			viesdata_free(&br->Numbers[i]);
 		}

@@ -32,6 +32,7 @@ int main()
 {
 	VIESAPIClient* viesapi = NULL;
 	
+	VIESStatus* vies_status = NULL;
 	AccountStatus* account = NULL;
 	VIESData* vies = NULL;
 	VIESData* vies_parsed = NULL;
@@ -52,6 +53,22 @@ int main()
 		goto err;
 	}
 
+	// Get current EU VIES system status
+	vies_status = viesapi_get_vies_status(viesapi);
+
+	if (vies_status != NULL) {
+		printf("VIES is available: %s\n", vies_status->Available ? "Yes" : "No");
+		printf("\n");
+
+		for (i = 0; i < vies_status->CountriesCount; i++) {
+			printf("Country code:      %s\n", vies_status->Countries[i]->CountryCode);
+			printf("Status:            %s\n", vies_status->Countries[i]->Status);
+			printf("\n");
+		}
+	} else {
+		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
+	}
+
 	// Get current account status
 	account = viesapi_get_account_status(viesapi);
 
@@ -59,8 +76,7 @@ int main()
 		printf("Plan name:         %s\n", account->BillingPlanName);
 		printf("Price:             %.2f\n", account->SubscriptionPrice);
 		printf("Number of queries: %d\n", account->TotalCount);
-	}
-	else {
+	} else {
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
@@ -71,8 +87,7 @@ int main()
 		printf("Country:  %s\n", vies->CountryCode);
 		printf("VAT ID:   %s\n", vies->VATNumber);
 		printf("Is valid: %d\n", vies->Valid);
-	}
-	else {
+	} else {
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
@@ -97,8 +112,7 @@ int main()
 			printf("StreetNumber: %s\n", vies_parsed->TraderAddressComponents->StreetNumber);
 			printf("HouseNumber:  %s\n", vies_parsed->TraderAddressComponents->HouseNumber);
 		}
-	}
-	else {
+	} else {
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
@@ -114,8 +128,7 @@ int main()
 
 	if (token != NULL) {
 		printf("Batch token:  %s\n", token);
-	}
-	else {
+	} else {
 		printf("Error: %s (code: %d)\n", viesapi_get_last_err(viesapi), viesapi_get_last_err_code(viesapi));
 	}
 
@@ -148,6 +161,7 @@ int main()
 err:
 	viesapi_free(&viesapi);
 
+	viesstatus_free(&vies_status);
 	accountstatus_free(&account);
 	viesdata_free(&vies);
 	viesdata_free(&vies_parsed);
